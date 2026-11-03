@@ -43,3 +43,11 @@ hear the sound effects.
 #### Version 1.2
 - Implemented a 4-tick delay between sound effects for banana peels spawning &
 banana slips.
+
+#### Version 1.3
+- Fixed an error that could occur in the plugin while loading into the game.
+- Fixed the plugin staying active after logging out or hopping worlds.
+- Fixed the plugin not activating when turned on inside a raid.
+- Improved banana slip detection so the sound effect plays once per slip.
+- Volume setting is now limited to 0-100.
+- Updated to current RuneLite APIs.
