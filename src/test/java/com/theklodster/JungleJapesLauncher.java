@@ -1,5 +1,6 @@
-package com.code;
+package com.theklodster;
 
+import com.theklodster.code.JungleJapesPlugin;
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 

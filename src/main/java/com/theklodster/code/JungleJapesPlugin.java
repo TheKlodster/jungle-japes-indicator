@@ -1,4 +1,4 @@
-package com.code;
+package com.theklodster.code;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Provides;
@@ -16,6 +16,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.VarbitID;
+import net.runelite.client.audio.AudioPlayer;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -23,10 +24,6 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.BufferedInputStream;
@@ -103,16 +100,17 @@ public class JungleJapesPlugin extends Plugin
 	private JungleJapesConfig config;
 
 	/**
+	 * RuneLite's audio player, used to play the sound effects.
+	 */
+	@Inject
+	private AudioPlayer audioPlayer;
+
+	/**
 	 * Whether the player is in a raid with an invocation level above 0, which enables the sound effects.
 	 */
 	@Getter
 	@VisibleForTesting
 	private boolean inToaRaid;
-
-	/**
-	 * The sound effect currently loaded, or null if none.
-	 */
-	private Clip clip;
 
 	/**
 	 * Game ticks remaining before another sound effect can play.
@@ -138,14 +136,13 @@ public class JungleJapesPlugin extends Plugin
 	}
 
 	/**
-	 * Resets the state and releases the audio clip.
+	 * Resets the state.
 	 */
 	@Override
 	protected void shutDown()
 	{
 		resetState();
 		bananaDelay = 0;
-		closeClip();
 	}
 
 	/**
@@ -302,8 +299,17 @@ public class JungleJapesPlugin extends Plugin
 	 */
 	private void playSound(String audio)
 	{
+		// A volume of 0 is muted, since the formula below cannot produce a gain for it.
+		int volume = config.volume();
+		if (volume <= 0)
+		{
+			return;
+		}
+
 		String soundFile = "/" + audio + ".wav";
-		closeClip();
+
+		// Converts the 0-100 volume to decibels, so that the volume scales with how loud the sound is.
+		float gain = (float) (20 * Math.log10(volume / 100.0));
 
 		try (InputStream input = JungleJapesPlugin.class.getResourceAsStream(soundFile))
 		{
@@ -313,52 +319,13 @@ public class JungleJapesPlugin extends Plugin
 				return;
 			}
 
-			// BufferedInputStream supports the optional mark/reset for AudioInputStream.
-			try (AudioInputStream sound = AudioSystem.getAudioInputStream(new BufferedInputStream(input)))
-			{
-				clip = AudioSystem.getClip();
-				clip.open(sound);
-			}
+			// BufferedInputStream supports the optional mark/reset for the audio stream.
+			audioPlayer.play(new BufferedInputStream(input), gain);
 		}
-		catch (UnsupportedAudioFileException | IOException | LineUnavailableException | IllegalArgumentException e)
+		catch (UnsupportedAudioFileException | IOException | LineUnavailableException e)
 		{
-			log.warn("Could not load the sound file {}: ", soundFile, e);
-			closeClip();
-			return;
+			log.warn("Could not play the sound file {}: ", soundFile, e);
 		}
-
-		setVolume(clip);
-		clip.start();
-	}
-
-	/**
-	 * Applies the configured volume to the clip, clamped to what the audio line supports.
-	 */
-	private void setVolume(Clip target)
-	{
-		if (!target.isControlSupported(FloatControl.Type.MASTER_GAIN))
-		{
-			return;
-		}
-
-		FloatControl volume = (FloatControl) target.getControl(FloatControl.Type.MASTER_GAIN);
-		float gain = config.volume() - 100;
-
-		volume.setValue(Math.max(volume.getMinimum(), Math.min(volume.getMaximum(), gain)));
-	}
-
-	/**
-	 * Closes the current clip, if any.
-	 */
-	private void closeClip()
-	{
-		if (clip == null)
-		{
-			return;
-		}
-
-		clip.close();
-		clip = null;
 	}
 
 	/**

@@ -49,5 +49,6 @@ banana slips.
 - Fixed the plugin staying active after logging out or hopping worlds.
 - Fixed the plugin not activating when turned on inside a raid.
 - Improved banana slip detection so the sound effect plays once per slip.
-- Volume setting is now limited to 0-100.
+- Volume setting is now limited to 0-100, and a volume of 0 now mutes the sound effects.
+- Sound effects now play through RuneLite's audio player.
 - Updated to current RuneLite APIs.

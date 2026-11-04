@@ -1,4 +1,4 @@
-package com.code;
+package com.theklodster.code;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
@@ -9,7 +9,6 @@ import net.runelite.client.config.Range;
 public interface JungleJapesConfig extends Config
 {
 	@Range(
-		min = 0,
 		max = 100
 	)
 	@ConfigItem(

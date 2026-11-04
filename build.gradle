@@ -1,15 +1,6 @@
 plugins {
 	id 'java'
-	//id "com.github.johnrengelman.shadow" version "6.1.0"
 }
-
-//shadowJar {
-//	from sourceSets.test.output
-//	configurations = [project.configurations.testRuntimeClasspath]
-//	manifest {
-//		attributes "Main-Class": "com.code.JungleJapesLauncher"
-//	}
-//}
 
 repositories {
 	mavenLocal()
@@ -32,7 +23,7 @@ dependencies {
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
 }
 
-group = 'com.example'
+group = 'com.theklodster'
 version = '1.3'
 sourceCompatibility = '1.8'
 
